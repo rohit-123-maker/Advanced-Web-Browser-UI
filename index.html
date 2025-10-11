@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Web Browser</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface-2: #2a2b38;
+      --tab: #555a66;
+      --tab-active: #eaeff9;
+      --text: #e8eaf0;
+      --text-dark: #0b1020;
+      --border: #2c3040;
+      --accent: #4f8cff;
+    }
+    body {margin:0; display:flex; flex-direction:column; height:100vh; background:var(--bg); color:var(--text); font-family:Inter,Arial;}
+    #tabBar {display:flex; gap:6px; padding:6px; background:rgba(0,0,0,.25); border-bottom:1px solid var(--border);}
+    .tab {background:var(--tab); color:#fff; padding:8px 14px; border-radius:10px 10px 0 0; cursor:pointer; display:inline-flex; align-items:center; gap:6px; min-width:120px;}
+    .tab.active {background:var(--tab-active); color:var(--text-dark);}
+    .tabLabel {font-weight:600;}
+    .closeBtn {border:none; background:transparent; color:#ff6b6b; font-weight:bold; cursor:pointer;}
+    #controls {display:flex; flex-wrap:wrap; gap:6px; padding:10px; background:var(--surface-2);}
+    #urlInput {flex:1; padding:10px; border:1px solid var(--border); border-radius:8px;}
+    select, button {padding:8px 10px; border-radius:8px; border:1px solid var(--border); cursor:pointer;}
+    #browserContainer {flex:1; position:relative;}
+    iframe {width:100%; height:100%; border:none; position:absolute; top:0; left:0;}
+    iframe.hidden {display:none;}
+    #sidebar {position:fixed; right:0; top:0; width:300px; height:100%; background:#fff; color:#000; border-left:1px solid var(--border); padding:12px; display:none; overflow:auto;}
+    .sidebarClose {position:absolute; right:6px; top:6px; border:none; background:transparent; font-size:20px; cursor:pointer;}
+    .linkItem {cursor:pointer; color:#1a6be3; text-decoration:underline; margin:4px 0;}
+  </style>
+</head>
+<body>
+  <div id="tabBar"></div>
+  <div id="controls">
+    <select id="searchEngineSelect">
+      <option value="https://www.wikipedia.org/wiki/">Wikipedia</option>
+      <!--option value="https://www.example.com/">Example.com</option-->
+      <!--option value="https://www.google.com/search?q=">Google</option-->
+      <option value="https://www.bing.com/search?q=">Bing</option>
+      <option value="https://sider.ai/?q=">Sider</option>
+      <!--option value="https://gemini.google.com/">Gemini</option-->
+      <!--option value="https://chatgpt.com/">ChatGPT</option-->
+      <!--option value="https://openai.com//">OpenAI</option-->
+      <!--option value="https://www.youtube.com/">YouTube</option-->
+      <!--option value="https://search.aol.com/">Aol</option-->
+      <!--option value="https://www.ask.com/">Ask</option-->
+      <!--option value="https://www.ecosia.org/">Ecosia</option-->
+      <!--option value="https://www.startpage.com/">StartPage</option-->
+      <!--option value="https://swisscows.com/">swisscows</option -->
+      <!--option value="https://search.yahoo.com/">Yahoo</option-->
+      <option value="https://archive.org/">Internet Archive</option>
+      <option value="https://semanticscholar.org/">Semantic Scholar</option>
+      <option value="https://openverse.org/">Openverse</option>
+      <!--option value="https://www.amazon.in/">Amazon</option-->
+      <!--option value="https://scholar.google.com/">Google Scholar</option-->
+      <!--option value="https://www.wolframalpha.com/">Wolframalpha</option-->
+      <!--option value="https://www.baidu.com/">Baidu</option-->
+      <!--option value="https://search.brave.com/">Brave</option-->
+      <!--option value="https://duckduckgo.com/">DuckDuckGo</option-->
+      <!--option value="https://www.mojeek.com/">Mojeek</option-->
+      <!--option value="https://yandex.com/">Yandex</option-->
+    </select>
+    <input type="text" id="urlInput" placeholder="Enter URL or search"/>
+    <button id="goButton">Go</button>
+    <button type="submit"><a href="/src/components/youtube.html">You Tube</a></button>
+    <button id="newTabButton">New Tab</button>
+    <button id="homeButton">Home</button>
+    <button id="bookmarkButton">☆ Bookmark</button>
+    <button id="historyButton">History</button>
+    <button id="settingsButton">⚙ Settings</button>
+  </div>
+  <div id="browserContainer"></div>
+  <div id="sidebar"></div>
+
+<script>
+  let tabs = [];
+  let activeTabIndex = -1;
+  let historyList = [];
+  let bookmarks = [];
+  let customHomePage = localStorage.getItem("customHomePage") || "https://www.wikipedia.org";
+
+  const tabBar = document.getElementById("tabBar");
+  const urlInput = document.getElementById("urlInput");
+  const goButton = document.getElementById("goButton");
+  const newTabButton = document.getElementById("newTabButton");
+  const homeButton = document.getElementById("homeButton");
+  const bookmarkButton = document.getElementById("bookmarkButton");
+  const historyButton = document.getElementById("historyButton");
+  const settingsButton = document.getElementById("settingsButton");
+  const browserContainer = document.getElementById("browserContainer");
+  const searchEngineSelect = document.getElementById("searchEngineSelect");
+  const sidebar = document.getElementById("sidebar");
+
+  function createTab(url = customHomePage) {
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.classList.add("hidden");
+    browserContainer.appendChild(iframe);
+
+    const tabIndex = tabs.length;
+    const tabButton = document.createElement("div");
+    tabButton.className = "tab";
+    tabButton.innerHTML = `<span class="tabLabel">Tab ${tabIndex + 1}</span>`;
+    tabButton.onclick = () => switchTab(tabIndex);
+
+    // Right-click to rename
+    tabButton.oncontextmenu = (e) => {
+      e.preventDefault();
+      const newName = prompt("Enter new tab name:", tabs[tabIndex].tabButton.querySelector(".tabLabel").innerText);
+      if (newName) tabButton.querySelector(".tabLabel").innerText = newName;
+    };
+
+    const closeBtn = document.createElement("button");
+    closeBtn.innerText = "×";
+    closeBtn.className = "closeBtn";
+    closeBtn.onclick = (e) => { e.stopPropagation(); closeTab(tabIndex); };
+    tabButton.appendChild(closeBtn);
+
+    tabBar.appendChild(tabButton);
+    tabs.push({ iframe, tabButton, url });
+    switchTab(tabIndex);
+  }
+
+  function switchTab(index) {
+    if (activeTabIndex >= 0) {
+      tabs[activeTabIndex].iframe.classList.add("hidden");
+      tabs[activeTabIndex].tabButton.classList.remove("active");
+    }
+    activeTabIndex = index;
+    tabs[activeTabIndex].iframe.classList.remove("hidden");
+    tabs[activeTabIndex].tabButton.classList.add("active");
+    urlInput.value = tabs[activeTabIndex].iframe.src;
+  }
+
+  function closeTab(index) {
+    const tab = tabs[index];
+    tab.iframe.remove();
+    tab.tabButton.remove();
+    tabs.splice(index, 1);
+    for (let i=0; i<tabs.length; i++) {
+      tabs[i].tabButton.onclick = () => switchTab(i);
+    }
+    if (tabs.length > 0) switchTab(Math.max(0, index-1));
+    else activeTabIndex = -1;
+  }
+
+  goButton.onclick = () => {
+    let input = urlInput.value.trim();
+    let searchEngine = searchEngineSelect.value;
+    let finalUrl = input;
+    if (!input.startsWith("http://") && !input.startsWith("https://")) {
+      finalUrl = input === "" ? searchEngine : searchEngine + encodeURIComponent(input);
+    }
+    if (activeTabIndex >= 0) {
+      tabs[activeTabIndex].iframe.src = finalUrl;
+      tabs[activeTabIndex].url = finalUrl;
+      historyList.push(finalUrl);
+    }
+  };
+  urlInput.addEventListener("keypress", e => { if (e.key === "Enter") goButton.click(); });
+  newTabButton.onclick = () => createTab();
+  homeButton.onclick = () => { if (activeTabIndex >= 0) tabs[activeTabIndex].iframe.src = customHomePage; };
+  bookmarkButton.onclick = () => { if (activeTabIndex >= 0) {bookmarks.push(tabs[activeTabIndex].iframe.src); alert("Bookmarked: "+tabs[activeTabIndex].iframe.src);} };
+  historyButton.onclick = () => showSidebar("History", historyList);
+  settingsButton.onclick = () => showSettings();
+
+  function showSidebar(title, items) {
+    sidebar.style.display="block";
+    sidebar.innerHTML = `<button class="sidebarClose" onclick="sidebar.style.display='none'">✕</button><h3>${title}</h3>`;
+    items.forEach(item=>{
+      const link=document.createElement("div");
+      link.className="linkItem"; link.innerText=item;
+      link.onclick=()=>{ if(activeTabIndex>=0) tabs[activeTabIndex].iframe.src=item; };
+      sidebar.appendChild(link);
+    });
+  }
+
+  function showSettings() {
+    sidebar.style.display="block";
+    sidebar.innerHTML = `<button class="sidebarClose" onclick="sidebar.style.display='none'">✕</button>
+      <h3>Settings</h3>
+      <label>Custom Home Page:</label>
+      <input type="text" id="homeInput" value="${customHomePage}" style="width:100%; padding:6px; margin:6px 0;"/>
+      <button onclick="saveHomePage()">Save Home</button>
+      <p>Right-click a tab name to rename it.</p>`;
+  }
+
+  function saveHomePage() {
+    const val = document.getElementById("homeInput").value.trim();
+    if (val) {
+      customHomePage = val;
+      localStorage.setItem("customHomePage", val);
+      alert("Home page set to: "+val);
+    }
+  }
+
+  // initial
+  createTab();
+</script>
+</body>
+</html>
