@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://rohit123-maker.github.io/My-Browser-old/sitemap.xml
