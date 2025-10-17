@@ -37,35 +37,35 @@
   <div id="controls">
     <select id="searchEngineSelect">
       <option value="https://www.wikipedia.org/wiki/">Wikipedia</option>
-      <!--option value="https://www.example.com/">Example.com</option-->
-      <!--option value="https://www.google.com/search?q=">Google</option-->
       <option value="https://www.bing.com/search?q=">Bing</option>
       <option value="https://sider.ai/?q=">Sider</option>
-      <!--option value="https://gemini.google.com/">Gemini</option-->
-      <!--option value="https://chatgpt.com/">ChatGPT</option-->
-      <!--option value="https://openai.com//">OpenAI</option-->
-      <!--option value="https://www.youtube.com/">YouTube</option-->
-      <!--option value="https://search.aol.com/">Aol</option-->
-      <!--option value="https://www.ask.com/">Ask</option-->
-      <!--option value="https://www.ecosia.org/">Ecosia</option-->
-      <!--option value="https://www.startpage.com/">StartPage</option-->
-      <!--option value="https://swisscows.com/">swisscows</option -->
-      <!--option value="https://search.yahoo.com/">Yahoo</option-->
       <option value="https://archive.org/">Internet Archive</option>
       <option value="https://semanticscholar.org/">Semantic Scholar</option>
       <option value="https://openverse.org/">Openverse</option>
-      <!--option value="https://www.amazon.in/">Amazon</option-->
-      <!--option value="https://scholar.google.com/">Google Scholar</option-->
-      <!--option value="https://www.wolframalpha.com/">Wolframalpha</option-->
-      <!--option value="https://www.baidu.com/">Baidu</option-->
-      <!--option value="https://search.brave.com/">Brave</option-->
-      <!--option value="https://duckduckgo.com/">DuckDuckGo</option-->
-      <!--option value="https://www.mojeek.com/">Mojeek</option-->
-      <!--option value="https://yandex.com/">Yandex</option-->
+      <option value="https://www.example.com/">Example.com*</option>
+      <option value="https://www.google.com/search?q=">Google*</option>
+      <option value="https://gemini.google.com/">Gemini*</option>
+      <option value="https://chatgpt.com/">ChatGPT*</option>
+      <option value="https://openai.com//">OpenAI*</option>
+      <option value="https://www.youtube.com/">YouTube*</option>
+      <option value="https://search.aol.com/">Aol*</option>
+      <option value="https://www.ask.com/">Ask*</option>
+      <option value="https://www.ecosia.org/">Ecosia*</option>
+      <option value="https://www.startpage.com/">StartPage*</option>
+      <option value="https://swisscows.com/">swisscows*</option>
+      <option value="https://search.yahoo.com/">Yahoo*</option>
+      <option value="https://www.amazon.in/">Amazon*</option>
+      <option value="https://scholar.google.com/">Google Scholar*</option>
+      <option value="https://www.wolframalpha.com/">Wolframalpha*</option>
+      <option value="https://www.baidu.com/">Baidu*</option>
+      <option value="https://search.brave.com/">Brave*</option>
+      <option value="https://duckduckgo.com/">DuckDuckGo*</option>
+      <option value="https://www.mojeek.com/">Mojeek*</option>
+      <option value="https://yandex.com/">Yandex*</option>
     </select>
     <input type="text" id="urlInput" placeholder="Enter URL or search"/>
     <button id="goButton">Go</button>
-    <button type="submit"><a href="/src/components/youtube.html">You Tube</a></button>
+    <button type="submit"><a href="https://rohit123-maker.github.io/Ultimate-Clock/">Ultimate-Clock</a></button>
     <button id="newTabButton">New Tab</button>
     <button id="homeButton">Home</button>
     <button id="bookmarkButton">☆ Bookmark</button>
@@ -146,20 +146,36 @@
     if (tabs.length > 0) switchTab(Math.max(0, index-1));
     else activeTabIndex = -1;
   }
+goButton.onclick = () => {
+  let input = urlInput.value.trim();
+  let searchEngine = searchEngineSelect.value;
+  let finalUrl = input;
 
-  goButton.onclick = () => {
-    let input = urlInput.value.trim();
-    let searchEngine = searchEngineSelect.value;
-    let finalUrl = input;
-    if (!input.startsWith("http://") && !input.startsWith("https://")) {
-      finalUrl = input === "" ? searchEngine : searchEngine + encodeURIComponent(input);
+  // Detect if input is a URL
+  const isUrl = input.includes('.') && !input.includes(' ');
+
+  if (!input.startsWith("http://") && !input.startsWith("https://")) {
+    if (isUrl) {
+      finalUrl = "http://" + input; // assume HTTP if missing
+    } else {
+      finalUrl = searchEngine + encodeURIComponent(input);
     }
-    if (activeTabIndex >= 0) {
-      tabs[activeTabIndex].iframe.src = finalUrl;
-      tabs[activeTabIndex].url = finalUrl;
-      historyList.push(finalUrl);
-    }
-  };
+  }
+
+  // ✅ Load into active tab iframe
+  if (activeTabIndex >= 0) {
+    tabs[activeTabIndex].iframe.src = finalUrl;
+    tabs[activeTabIndex].url = finalUrl;
+    urlInput.value = finalUrl;
+
+    // ✅ Add to history
+    historyList.push(finalUrl);
+  } else {
+    // if no tab, create one
+    createTab(finalUrl);
+  }
+};
+
   urlInput.addEventListener("keypress", e => { if (e.key === "Enter") goButton.click(); });
   newTabButton.onclick = () => createTab();
   homeButton.onclick = () => { if (activeTabIndex >= 0) tabs[activeTabIndex].iframe.src = customHomePage; };
