@@ -73,6 +73,8 @@
     <button id="bookmarkButton">☆ Bookmark</button>
     <button id="historyButton">History</button>
     <button id="settingsButton">⚙ Settings</button>
+    <!-- Added ChatGPT-Atlas integration button -->
+    <button id="atlasButton">ChatGPT-Atlas</button>
   </div>
   <div id="browserContainer"></div>
   <div id="sidebar"></div>
@@ -95,6 +97,7 @@
   const browserContainer = document.getElementById("browserContainer");
   const searchEngineSelect = document.getElementById("searchEngineSelect");
   const sidebar = document.getElementById("sidebar");
+  const atlasButton = document.getElementById("atlasButton");
 
   function createTab(url = customHomePage) {
     const iframe = document.createElement("iframe");
@@ -148,35 +151,32 @@
     if (tabs.length > 0) switchTab(Math.max(0, index-1));
     else activeTabIndex = -1;
   }
-goButton.onclick = () => {
-  let input = urlInput.value.trim();
-  let searchEngine = searchEngineSelect.value;
-  let finalUrl = input;
 
-  // Detect if input is a URL
-  const isUrl = input.includes('.') && !input.includes(' ');
+  goButton.onclick = () => {
+    let input = urlInput.value.trim();
+    let searchEngine = searchEngineSelect.value;
+    let finalUrl = input;
 
-  if (!input.startsWith("http://") && !input.startsWith("https://")) {
-    if (isUrl) {
-      finalUrl = "http://" + input; // assume HTTP if missing
-    } else {
-      finalUrl = searchEngine + encodeURIComponent(input);
+    const isUrl = input.includes('.') && !input.includes(' ');
+
+    if (!input.startsWith("http://") && !input.startsWith("https://")) {
+      if (isUrl) {
+        finalUrl = "http://" + input;
+      } else {
+        finalUrl = searchEngine + encodeURIComponent(input);
+      }
     }
-  }
 
-  // ✅ Load into active tab iframe
-  if (activeTabIndex >= 0) {
-    tabs[activeTabIndex].iframe.src = finalUrl;
-    tabs[activeTabIndex].url = finalUrl;
-    urlInput.value = finalUrl;
+    if (activeTabIndex >= 0) {
+      tabs[activeTabIndex].iframe.src = finalUrl;
+      tabs[activeTabIndex].url = finalUrl;
+      urlInput.value = finalUrl;
 
-    // ✅ Add to history
-    historyList.push(finalUrl);
-  } else {
-    // if no tab, create one
-    createTab(finalUrl);
-  }
-};
+      historyList.push(finalUrl);
+    } else {
+      createTab(finalUrl);
+    }
+  };
 
   urlInput.addEventListener("keypress", e => { if (e.key === "Enter") goButton.click(); });
   newTabButton.onclick = () => createTab();
@@ -184,6 +184,15 @@ goButton.onclick = () => {
   bookmarkButton.onclick = () => { if (activeTabIndex >= 0) {bookmarks.push(tabs[activeTabIndex].iframe.src); alert("Bookmarked: "+tabs[activeTabIndex].iframe.src);} };
   historyButton.onclick = () => showSidebar("History", historyList);
   settingsButton.onclick = () => showSettings();
+
+  atlasButton.onclick = () => {
+    const atlasUrl = "./ChatGPT-Atlas/index.html";
+    if (activeTabIndex >= 0) {
+      tabs[activeTabIndex].iframe.src = atlasUrl;
+    } else {
+      createTab(atlasUrl);
+    }
+  };
 
   function showSidebar(title, items) {
     sidebar.style.display="block";
