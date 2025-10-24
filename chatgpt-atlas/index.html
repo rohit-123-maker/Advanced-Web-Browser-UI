@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatGPT Atlas - My Browser</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="chatbox" aria-live="polite">
+    <header class="chat-header">
+      <div class="title">🤖 ChatGPT Atlas</div>
+      <button id="toggleBtn" aria-label="Minimize chat">–</button>
+    </header>
+    <div id="messages" role="log"></div>
+    <form id="inputArea">
+      <input id="userInput" type="text" placeholder="Ask ChatGPT Atlas..." autocomplete="off" aria-label="Your message" />
+      <button id="sendBtn" type="submit">Send</button>
+    </form>
+  </div>
+
+  <button id="launcher" aria-label="Open ChatGPT Atlas">💬</button>
+
+  <script src="chatgpt.js"></script>
+</body>
+</html>
